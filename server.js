@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const { Pool } = require('pg');
 require('dotenv').config(); // Carrega as variáveis do arquivo .env
-const bcrypt = require('bcrypt'); // Para hash de senhas
+const bcrypt = require('bcryptjs'); // Para hash de senhas
 const app = express();
 
 // Conexão com o banco de dados PostgreSQL utilizando as variáveis de ambiente
