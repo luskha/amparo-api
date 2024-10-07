@@ -65,7 +65,7 @@ app.post('/cadastro', async (req, res) => {
         tipoUsuario, nome, cpf, telefone, email, senha, dataNascimento,
         endereco, cep, certificadoRegistro, nomeInstituicao,
         horariosAtendimento, nomeFantasia, horariosFuncionamento, numeroEmergencia
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
       [
         tipoUsuario, nome, cpf, telefone, email, hashedPassword, dataNascimento,
         endereco, cep, certificadoRegistroValue, nomeInstituicaoValue,
