@@ -75,7 +75,7 @@ app.post('/cadastro', async (req, res) => {
 
     res.status(201).send({ success: true, message: 'Usuário cadastrado com sucesso!' });
   } catch (err) {
-    console.error(err.message);
+    console.error('Erro no cadastro:', err); // Log detalhado do erro
     res.status(500).send({ success: false, message: 'Erro ao cadastrar o usuário.' });
   }
 });
