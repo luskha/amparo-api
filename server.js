@@ -12,7 +12,7 @@ const pool = new Pool({
   database: process.env.PGDATABASE,
   user: process.env.PGUSER,
   password: process.env.PGPASSWORD,
-  port: process.env.PGPORT || 5432, // Adiciona a porta como 5432 por padrão
+  port: process.env.PGPORT || 5432,
   ssl: {
     rejectUnauthorized: false,
   },
@@ -59,7 +59,7 @@ app.post('/cadastro', async (req, res) => {
     const horariosFuncionamentoValue = horariosFuncionamento || null;
     const numeroEmergenciaValue = numeroEmergencia || null;
 
-    // Se tudo estiver ok, insira o novo usuário no banco
+    // Inserir novo usuário no banco
     await pool.query(
       `INSERT INTO amparousers (
         tipoUsuario, nome, cpf, telefone, email, senha, dataNascimento,
@@ -75,7 +75,7 @@ app.post('/cadastro', async (req, res) => {
 
     res.status(201).send({ success: true, message: 'Usuário cadastrado com sucesso!' });
   } catch (err) {
-    console.error('Erro no cadastro:', err); // Log detalhado do erro
+    console.error('Erro no cadastro:', err);
     res.status(500).send({ success: false, message: 'Erro ao cadastrar o usuário.' });
   }
 });
@@ -98,7 +98,6 @@ app.post('/login', async (req, res) => {
       return res.status(400).send({ success: false, message: 'E-mail ou senha inválidos.' });
     }
 
-    // Retornar os dados do usuário ou um token JWT (não implementado aqui)
     res.status(200).send({ success: true, message: 'Login bem-sucedido!', user });
   } catch (err) {
     console.error(err.message);
@@ -116,7 +115,7 @@ app.get('/user/:id', async (req, res) => {
       return res.status(404).send({ success: false, message: 'Usuário não encontrado.' });
     }
 
-    const { numeroemergencia } = result.rows[0]; // Nome do campo deve corresponder ao do banco de dados
+    const { numeroemergencia } = result.rows[0];
     res.status(200).send({ success: true, numeroEmergencia: numeroemergencia });
   } catch (err) {
     console.error(err.message);
@@ -124,7 +123,96 @@ app.get('/user/:id', async (req, res) => {
   }
 });
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Servidor rodando na porta ${port}`);
+// Rota para criar um novo agendamento
+app.post('/agendamentos', async (req, res) => {
+  const { idUsuario, dataAgendamento, horaAgendamento, descricao } = req.body;
+
+  try {
+    const usuarioExistente = await pool.query('SELECT * FROM amparousers WHERE id = $1', [idUsuario]);
+    if (usuarioExistente.rows.length === 0) {
+      return res.status(404).send({ success: false, message: 'Usuário não encontrado.' });
+    }
+
+    await pool.query(
+      `INSERT INTO agendamentos (idUsuario, dataAgendamento, horaAgendamento, descricao) 
+       VALUES ($1, $2, $3, $4)`,
+      [idUsuario, dataAgendamento, horaAgendamento, descricao]
+    );
+
+    res.status(201).send({ success: true, message: 'Agendamento criado com sucesso!' });
+  } catch (err) {
+    console.error('Erro ao criar agendamento:', err);
+    res.status(500).send({ success: false, message: 'Erro ao criar agendamento.' });
+  }
+});
+
+// Rota para criar um novo medicamento
+app.post('/medicamentos', async (req, res) => {
+  const { idUsuario, nomeMedicamento, vezesPorDia, periodoUso, primeiraDose } = req.body;
+
+  try {
+    const usuarioExistente = await pool.query('SELECT * FROM amparousers WHERE id = $1', [idUsuario]);
+    if (usuarioExistente.rows.length === 0) {
+      return res.status(404).send({ success: false, message: 'Usuário não encontrado.' });
+    }
+
+    await pool.query(
+      `INSERT INTO medicamentos (idUsuario, nomeMedicamento, vezesPorDia, periodoUso, primeiraDose) 
+       VALUES ($1, $2, $3, $4, $5)`,
+      [idUsuario, nomeMedicamento, vezesPorDia, periodoUso, primeiraDose]
+    );
+
+    res.status(201).send({ success: true, message: 'Medicamento registrado com sucesso!' });
+  } catch (err) {
+    console.error('Erro ao registrar medicamento:', err);
+    res.status(500).send({ success: false, message: 'Erro ao registrar medicamento.' });
+  }
+});
+
+// Rota para listar os agendamentos de um usuário
+app.get('/agendamentos/:idUsuario', async (req, res) => {
+  const { idUsuario } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM agendamentos WHERE idUsuario = $1 ORDER BY dataAgendamento, horaAgendamento', 
+      [idUsuario]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).send({ success: false, message: 'Nenhum agendamento encontrado.' });
+    }
+
+    res.status(200).send({ success: true, agendamentos: result.rows });
+  } catch (err) {
+    console.error('Erro ao buscar agendamentos:', err);
+    res.status(500).send({ success: false, message: 'Erro ao buscar agendamentos.' });
+  }
+});
+
+// Rota para listar os medicamentos de um usuário
+app.get('/medicamentos/:idUsuario', async (req, res) => {
+  const { idUsuario } = req.params;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM medicamentos WHERE idUsuario = $1 ORDER BY primeiraDose ASC',
+      [idUsuario]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).send({ success: false, message: 'Nenhum medicamento encontrado.' });
+    }
+
+    res.status(200).send({ success: true, medicamentos: result.rows });
+  } catch (err) {
+    console.error('Erro ao buscar medicamentos:', err);
+    res.status(500).send({ success: false, message: 'Erro ao buscar medicamentos.' });
+  }
+});
+
+// Configuração do servidor
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
