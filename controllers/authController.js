@@ -10,8 +10,12 @@ exports.login = async (req, res, next) => {
   const { email, senha } = req.body;
 
   try {
-    const token = await authService.loginUser(email, senha);
-    res.status(200).json({ success: true, token });
+    const user = await authService.loginUser(email, senha);
+    if (user) {
+      res.status(200).json({ success: true, user });
+    } else {
+      res.status(401).json({ success: false, message: 'Credenciais inválidas' });
+    }
   } catch (error) {
     next(error);
   }
