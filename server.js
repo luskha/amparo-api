@@ -14,8 +14,8 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Rotas
-app.use('/auth', authRoutes);
-app.use('/users', userRoutes);
+app.use('/auth', authRoutes);  // /auth/login, /auth/register
+app.use('/users', userRoutes);  // /users para cadastrar usuário
 app.use('/appointments', appointmentRoutes);
 app.use('/medications', medicationRoutes);
 
